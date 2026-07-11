@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Find Stanley - Contact Info</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-50 min-h-screen flex items-center justify-center p-4 antialiased">
+    <div id="app" class="max-w-md w-full bg-white rounded-3xl shadow-2xl overflow-hidden hidden border border-amber-100">
+        <!-- High Visibility Header -->
+        <div class="bg-amber-500 p-6 text-white text-center">
+            <span class="bg-amber-700 text-xs uppercase tracking-widest font-bold px-3 py-1 rounded-full text-amber-100">Lost Puppy</span>
+            <h1 class="text-4xl font-black mt-2 tracking-tight">HELP ME GET HOME!</h1>
+            <p class="text-amber-500 mt-2 text-sm font-bold bg-white inline-block px-4 py-1 rounded-full shadow-sm">I'm friendly!</p>
+        </div>
+
+        <!-- Main Body -->
+        <div class="p-6 space-y-6">
+            <!-- Puppy Profile Header -->
+            <div class="flex items-center space-x-4 bg-slate-50 p-3 rounded-2xl">
+                <img id="dog-photo" src="" alt="Stanley" class="w-20 h-20 rounded-xl object-cover border-2 border-amber-400 shadow-sm">
+                <div>
+                    <h2 id="dog-name" class="text-2xl font-black text-slate-800"></h2>
+                    <p id="dog-breed" class="text-sm font-semibold text-slate-500"></p>
+                    <p id="features" class="text-xs text-slate-600 mt-1 italic leading-tight"></p>
+                </div>
+            </div>
+
+            <!-- Instant Contact Buttons -->
+            <div class="grid grid-cols-2 gap-3">
+                <a id="btn-call" href="#" class="text-center bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold py-4 px-4 rounded-xl shadow-md transition duration-150 flex flex-col items-center justify-center">
+                    <span class="text-xl mb-0.5">📞</span> Call Bill
+                </a>
+                <a id="btn-text" href="#" class="text-center bg-sky-600 hover:bg-sky-700 text-white font-extrabold py-4 px-4 rounded-xl shadow-md transition duration-150 flex flex-col items-center justify-center">
+                    <span class="text-xl mb-0.5">💬</span> Text Bill
+                </a>
+            </div>
+
+            <!-- Information Cards -->
+            <div class="space-y-3 text-sm">
+                <div class="bg-slate-50 p-4 rounded-xl border border-slate-100">
+                    <span class="text-xs font-bold text-slate-400 uppercase tracking-wider block">Owner Name & Email</span>
+                    <p id="owner-name" class="font-bold text-slate-800 mt-0.5 text-base"></p>
+                    <p id="owner-email" class="text-slate-600 font-medium"></p>
+                </div>
+
+                <div class="bg-slate-50 p-4 rounded-xl border border-slate-100">
+                    <span class="text-xs font-bold text-slate-400 uppercase tracking-wider block">Home Address</span>
+                    <p id="owner-address" class="font-semibold text-slate-700 mt-0.5 leading-relaxed"></p>
+                </div>
+
+                <div class="bg-amber-50 p-4 rounded-xl border border-amber-100">
+                    <span class="text-xs font-bold text-amber-600 uppercase tracking-wider block">Medical & Microchip</span>
+                    <p id="microchip" class="font-bold text-amber-900 mt-0.5"></p>
+                    <p id="vet-info" class="text-xs text-amber-800 mt-0.5 font-medium"></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Error Screen -->
+    <div id="error-state" class="text-center p-8 max-w-sm bg-white rounded-2xl shadow-xl hidden border border-red-100">
+        <p class="text-red-500 font-black text-2xl">⚠️ Access Error</p>
+        <p class="text-slate-500 text-sm mt-2 font-medium">Profile configuration missing or tag ID mismatch.</p>
+    </div>
+
+    <script>
+        async function init() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const tagId = urlParams.get('id');
+
+            if (!tagId) {
+                document.getElementById('error-state').classList.remove('hidden');
+                return;
+            }
+
+            try {
+                const response = await fetch('./database.json');
+                const data = await response.json();
+                const profile = data.tags.find(t => t.tagId === tagId && t.status === 'active');
+
+                if (!profile) {
+                    document.getElementById('error-state').classList.remove('hidden');
+                    return;
+                }
+
+                document.getElementById('dog-name').textContent = profile.dog.name;
+                document.getElementById('dog-breed').textContent = `${profile.dog.breed} (${profile.dog.age})`;
+                document.getElementById('features').textContent = profile.dog.distinctiveFeatures;
+                document.getElementById('dog-photo').src = profile.dog.photoUrl;
+                
+                document.getElementById('btn-call').href = `tel:${profile.owner.phone}`;
+                document.getElementById('btn-text').href = `sms:${profile.owner.phone}?body=I%20found%20your%20Lab%20puppy%20Stanley!`;
+                
+                document.getElementById('owner-name').textContent = profile.owner.name;
+                document.getElementById('owner-email').textContent = profile.privacySettings.showEmail ? profile.owner.email : '';
+                document.getElementById('owner-address').textContent = profile.location.displayAddress;
+                
+                document.getElementById('microchip').textContent = `Microchip #: ${profile.medical.microchipNumber}`;
+                document.getElementById('vet-info').textContent = `Vet: ${profile.medical.vetClinic} (${profile.medical.vetPhone})`;
+
+                document.getElementById('app').classList.remove('hidden');
+            } catch (err) {
+                console.error(err);
+                document.getElementById('error-state').classList.remove('hidden');
+            }
+        }
+        init();
+    </script>
+</body>
+</html>
